@@ -1,25 +1,25 @@
-import Cliente from "../../models/Cliente.js";
+import ItemFactura from "../../models/ItemFactura.js";
 
 export default async (req, res, next) => {
   try {
 
     let queries = {};
-    
-    const allClients = await Cliente.find(
+
+    const allItemInvoice = await ItemFactura.find(
       queries,
       "-__v -createdAt -updatedAt"
     );
-    if (!allClients) {
+    if (!allItemInvoice) {
       return res.status(404).json({
         success: true,
-        message: "Clients not found",
+        message: "Item Invoice not found",
         response: null,
       });
     }
     return res.status(200).json({
       success: true,
-      message: "Clients found",
-      response: allClients,
+      message: "Item Invoice found",
+      response: allItemInvoice,
     });
   } catch (error) {
     next(error);
