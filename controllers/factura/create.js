@@ -1,16 +1,16 @@
-import Cliente from "../../models/Cliente.js";
+import Factura from "../../models/Factura.js";
 
 export default async (req, res, next) => {
   try {
 
     
-    let newClient = await Cliente.create(req.body)
+    let newInvoice = await Factura.create(req.body)
 
     
     return res.status(201).json({
       success: true,
-      message: "Client created",
-      response: newClient,
+      message: "invoice created",
+      response: newInvoice,
     });
   } catch (error) {
 

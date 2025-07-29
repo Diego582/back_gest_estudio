@@ -1,25 +1,25 @@
-import Cliente from "../../models/Cliente.js";
+import Factura from "../../models/Factura.js";
 
 export default async (req, res, next) => {
   try {
 
     let queries = {};
-    
-    const allClients = await Cliente.find(
+
+    const allInvoice = await Factura.find(
       queries,
       "-__v -createdAt -updatedAt"
     );
-    if (!allClients) {
+    if (!allInvoice) {
       return res.status(404).json({
         success: true,
-        message: "Clients not found",
+        message: "Invoice not found",
         response: null,
       });
     }
     return res.status(200).json({
       success: true,
-      message: "Clients found",
-      response: allClients,
+      message: "Invoice found",
+      response: allInvoice,
     });
   } catch (error) {
     next(error);
