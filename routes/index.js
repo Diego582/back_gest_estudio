@@ -7,7 +7,7 @@ import itemInvoicesRouter from "./itemInvoice.js"
 
 const router = express.Router();
 
-router.use("/clients", clientsRouter);
+router.use("/clientes", clientsRouter);
 router.use("/invoices", invoicesRouter);
 router.use("/itemsinvoices", itemInvoicesRouter);
 

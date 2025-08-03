@@ -2,8 +2,9 @@ import Cliente from "../../models/Cliente.js";
 
 export default async (req, res, next) => {
   try {
+
     let updatedClient = await Cliente.findByIdAndUpdate(
-      req.params._id,
+      req.params.id,
       req.body,
       { new: true }
     ).select();
