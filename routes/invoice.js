@@ -3,10 +3,13 @@ import create from "../controllers/factura/create.js";
 import destroy from "../controllers/factura/destroy.js";
 import read from "../controllers/factura/read.js";
 import readOne from "../controllers/factura/readOne.js";
-import update from "../controllers/factura/destroy.js";
-
+import update from "../controllers/factura/update.js";
+import uploadExcelFacturas from "../controllers/factura/uploadExcelFacturas.js";
+import multer from "multer";
 
 const router = express.Router();
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 /* GET users listing. */
 router.post("/", create);
@@ -20,5 +23,7 @@ router.put("/:id", update);
 
 //DESTROY
 router.delete("/:id", destroy);
+
+router.post("/upload-excel", upload.single("file"), uploadExcelFacturas);
 
 export default router;

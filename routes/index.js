@@ -8,8 +8,8 @@ import itemInvoicesRouter from "./itemInvoice.js"
 const router = express.Router();
 
 router.use("/clientes", clientsRouter);
-router.use("/invoices", invoicesRouter);
-router.use("/itemsinvoices", itemInvoicesRouter);
+router.use("/facturas", invoicesRouter);
+router.use("/itemsfacturas", itemInvoicesRouter);
 
 
 export default router;
