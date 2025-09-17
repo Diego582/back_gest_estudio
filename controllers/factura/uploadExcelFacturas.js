@@ -1,4 +1,5 @@
 import xlsx from "xlsx";
+import Cliente from "../../models/Cliente.js";
 //import Factura from "../models/factura.model.js";
 
 // Cargar facturas desde Excel
@@ -8,6 +9,9 @@ export default async (req, res, next) => {
     if (!req.file) {
       return res.status(400).json({ message: "No se subió ningún archivo" });
     }
+    let cliente = await Cliente.findOne({ _id: req.body.clienteId }).select();
+
+    console.log("Cliente:", cliente);
 
     // Leer el Excel desde buffer
     const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
@@ -24,6 +28,20 @@ export default async (req, res, next) => {
         .json({ message: "El archivo no tiene datos suficientes" });
     }
 
+
+    // Control de contribuyente y tipo de comprobantes
+    const titulo = data[0][0];
+
+    // Detectar si es emitido o recibido
+    const tipoComprobante = titulo.includes("Emitidos") ? "emitidos" : "recibidos";
+
+    // Extraer CUIT con regex
+    const match = titulo.match(/CUIT\s+(\d+)/);
+    const cuit = match ? match[1] : null;
+
+    if (cliente.cuit == cuit) {
+      console.log("los cuit coinciden")
+    }
     const headers = data[1]; // segunda fila: títulos reales
     const rows = data.slice(2); // filas con datos
 
@@ -42,7 +60,7 @@ export default async (req, res, next) => {
         );
       });
 
-    console.log(JSON.stringify(jsonData, null, 2));
+    /*  console.log(JSON.stringify(jsonData, null, 2)); */
     // res.status(200).json(jsonData);
     // Mapear cada fila a factura
     /*  const facturas = data.map((row) => ({
