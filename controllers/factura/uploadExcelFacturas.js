@@ -1,5 +1,6 @@
 import xlsx from "xlsx";
 import Cliente from "../../models/Cliente.js";
+import ItemFactura from "../../models/ItemFactura.js";
 //import Factura from "../models/factura.model.js";
 
 // Cargar facturas desde Excel
@@ -59,6 +60,62 @@ export default async (req, res, next) => {
           (value) => value !== "" && value !== null
         );
       });
+    // carga de factura a BBDD
+    for (const row of jsonData) {
+      // armar objeto factura desde el Excel
+      const facturaData = {
+        cliente_id: cliente.clienteId,
+        fecha: new Date(row["Fecha"]),
+        tipo: row["Tipo"].includes("Emitida") ? "emitida" : "recibida",
+        codigo_comprobante: parseInt(row["Tipo"].split(" - ")[0]),
+        punto_venta: row["Punto de Venta"],
+        numero: row["Número Desde"], // si manejás rango, acá decidir
+        cuit_dni: row["Nro. Doc. Receptor"].toString(),
+        razon_social: row["Denominación Receptor"],
+        detalle: row["Detalle"] || ""
+      };
+
+      try {
+        // insertar factura (si ya existe, lanza error por índice único)
+        //const factura = await Factura.create(facturaData);
+        console.log(factura, 'esto es la factura')
+        // simular items (adaptá según columnas de tu Excel)
+        const item = {
+          //factura_id: factura._id,
+          descripcion: "Venta de productos",
+          excento: row["Imp. Op. Exentas"],
+          alicuotasIva: [
+            {
+              tipo: "21%",
+              netoGravado: row["Imp. Neto Gravado"],
+              iva: row["IVA"]
+            }
+          ],
+          percepciones: [],
+          retenciones: [],
+          impuestosInternos: 0,
+          ITC: 0
+        };
+
+        // await ItemFactura.create(item);
+        console.log(item, 'esto es item factura')
+        insertadas++;
+        facturasCreadas.push(factura);
+      } catch (err) {
+        if (err.code === 11000) {
+          // error de índice único (duplicada)
+          duplicadas++;
+        } else {
+          console.error("Error insertando factura:", err);
+        }
+      }
+    }
+
+
+
+
+
+
 
     /*  console.log(JSON.stringify(jsonData, null, 2)); */
     // res.status(200).json(jsonData);
