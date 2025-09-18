@@ -1,18 +1,80 @@
 import xlsx from "xlsx";
 import Cliente from "../../models/Cliente.js";
 import ItemFactura from "../../models/ItemFactura.js";
+import Factura from "../../models/Factura.js";
+
 //import Factura from "../models/factura.model.js";
 
 // Cargar facturas desde Excel
 
 export default async (req, res, next) => {
   try {
+    // 🔧 Función que arma el ItemFactura desde el Excel
+    function buildItemFactura(row, facturaId) {
+      const item = {
+        factura_id: facturaId,
+        descripcion: "Venta de productos", // o traída de otra columna si existe
+        excento: row["Imp. Op. Exentas"] || 0,
+        alicuotasIva: [],
+        percepciones: [],
+        retenciones: [],
+        impuestosInternos: row["Impuestos Internos"] || 0,
+        netoNoGravados: row["Neto No Gravado"] || 0,
+        ITC: row["Impuesto ITC"] || 0,
+      };
+      console.log(item, "esto es item ------------------ previo a arrays");
+      // IVA dinámico
+      const ivaTipos = ["2,5%", "5%", "10,5%", "21%", "27%"];
+      ivaTipos.forEach((tipo) => {
+        const neto = row[`Neto Grav. IVA ${tipo}`];
+        console.log(`Neto Grav. IVA ${tipo}`, "`Neto Grav. IVA ${tipo}`");
+        const iva = row[`IVA ${tipo}`];
+        console.log(`IVA ${tipo}`, "`IVA ${tipo}`");
+
+        if (neto && iva) {
+          item.alicuotasIva.push({
+            tipo,
+            netoGravado: parseFloat(neto),
+            iva: parseFloat(iva),
+          });
+        }
+      });
+
+      // Percepciones dinámicas
+      const percepcionesMap = ["IVA", "IIBB", "Ganancias"];
+      percepcionesMap.forEach((tipo) => {
+        const monto = row[`Percepción ${tipo}`];
+        if (monto) {
+          item.percepciones.push({
+            tipo,
+            monto: parseFloat(monto),
+          });
+        }
+      });
+
+      // Retenciones dinámicas
+      const retencionesMap = ["IVA", "IIBB", "Ganancias", "SUSS"];
+      retencionesMap.forEach((tipo) => {
+        const monto = row[`Retención ${tipo}`];
+        if (monto) {
+          item.retenciones.push({
+            tipo,
+            monto: parseFloat(monto),
+          });
+        }
+      });
+      console.log(item, "esto es item ------------------ dewspues de arrays");
+
+      return item;
+    }
+
     if (!req.file) {
       return res.status(400).json({ message: "No se subió ningún archivo" });
     }
-    let cliente = await Cliente.findOne({ _id: req.body.clienteId }).select();
 
-    console.log("Cliente:", cliente);
+    const IdClient = req.body.clienteId;
+
+    let cliente = await Cliente.findOne({ _id: IdClient }).select();
 
     // Leer el Excel desde buffer
     const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
@@ -29,19 +91,20 @@ export default async (req, res, next) => {
         .json({ message: "El archivo no tiene datos suficientes" });
     }
 
-
     // Control de contribuyente y tipo de comprobantes
     const titulo = data[0][0];
 
-    // Detectar si es emitido o recibido
-    const tipoComprobante = titulo.includes("Emitidos") ? "emitidos" : "recibidos";
+    // Detectar si es emitido o recibido  'emitida', 'recibida'
+    const tipoComprobante = titulo.includes("Emitidos")
+      ? "emitida"
+      : "recibida";
 
     // Extraer CUIT con regex
     const match = titulo.match(/CUIT\s+(\d+)/);
     const cuit = match ? match[1] : null;
 
     if (cliente.cuit == cuit) {
-      console.log("los cuit coinciden")
+      console.log("los cuit coinciden");
     }
     const headers = data[1]; // segunda fila: títulos reales
     const rows = data.slice(2); // filas con datos
@@ -62,45 +125,38 @@ export default async (req, res, next) => {
       });
     // carga de factura a BBDD
     for (const row of jsonData) {
+      console.log("row ", row);
       // armar objeto factura desde el Excel
+      const [dia, mes, anio] = row["Fecha"].split("/");
       const facturaData = {
-        cliente_id: cliente.clienteId,
-        fecha: new Date(row["Fecha"]),
-        tipo: row["Tipo"].includes("Emitida") ? "emitida" : "recibida",
-        codigo_comprobante: parseInt(row["Tipo"].split(" - ")[0]),
+        cliente_id: IdClient,
+        fecha: new Date(`${anio}-${mes}-${dia}`),
+        tipo: tipoComprobante,
+        codigo_comprobante: row["Tipo"],
         punto_venta: row["Punto de Venta"],
         numero: row["Número Desde"], // si manejás rango, acá decidir
         cuit_dni: row["Nro. Doc. Receptor"].toString(),
-        razon_social: row["Denominación Receptor"],
-        detalle: row["Detalle"] || ""
+        razon_social:
+          row["Denominación Receptor"] || row["Denominación Emisor"],
+        detalle: row["Detalle"] || "",
+        monto_total: row["Imp. Total"],
       };
 
       try {
-        // insertar factura (si ya existe, lanza error por índice único)
-        //const factura = await Factura.create(facturaData);
-        console.log(factura, 'esto es la factura')
-        // simular items (adaptá según columnas de tu Excel)
-        const item = {
-          //factura_id: factura._id,
-          descripcion: "Venta de productos",
-          excento: row["Imp. Op. Exentas"],
-          alicuotasIva: [
-            {
-              tipo: "21%",
-              netoGravado: row["Imp. Neto Gravado"],
-              iva: row["IVA"]
-            }
-          ],
-          percepciones: [],
-          retenciones: [],
-          impuestosInternos: 0,
-          ITC: 0
-        };
+        // Guardar Factura
+        console.log(facturaData, "facturaData -----------------------");
 
-        // await ItemFactura.create(item);
-        console.log(item, 'esto es item factura')
+        const factura = await Factura.create(facturaData);
+
+        console.log(factura, "factura -----------------------");
+
+        // Construir ItemFactura en base al row
+        const itemData = buildItemFactura(row, factura._id);
+        console.log(itemData, "factura -----------------------");
+
+        await ItemFactura.create(itemData);
+
         insertadas++;
-        facturasCreadas.push(factura);
       } catch (err) {
         if (err.code === 11000) {
           // error de índice único (duplicada)
@@ -110,12 +166,6 @@ export default async (req, res, next) => {
         }
       }
     }
-
-
-
-
-
-
 
     /*  console.log(JSON.stringify(jsonData, null, 2)); */
     // res.status(200).json(jsonData);
