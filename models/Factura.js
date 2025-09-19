@@ -42,8 +42,7 @@ const facturaSchema = new mongoose.Schema(
     },
     monto_total: {
       type: Number,
-      default: 0,
-      min: 0,
+      required: true,
     },
   },
   {

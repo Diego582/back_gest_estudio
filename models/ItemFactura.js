@@ -14,7 +14,6 @@ const itemFacturaSchema = new mongoose.Schema(
     },
     excento: {
       type: Number,
-      min: 0,
     },
     alicuotasIva: [
       {
@@ -25,12 +24,10 @@ const itemFacturaSchema = new mongoose.Schema(
         netoGravado: {
           type: Number,
           required: true,
-          min: 0,
         },
         iva: {
           type: Number,
           required: true,
-          min: 0,
         },
       },
     ],
@@ -43,7 +40,6 @@ const itemFacturaSchema = new mongoose.Schema(
         monto: {
           type: Number,
           required: true,
-          min: 0,
         },
       },
     ],
@@ -56,21 +52,17 @@ const itemFacturaSchema = new mongoose.Schema(
         monto: {
           type: Number,
           required: true,
-          min: 0,
         },
       },
     ],
     impuestosInternos: {
       type: Number,
-      min: 0,
     },
     netoNoGravados: {
       type: Number,
-      min: 0,
     },
     ITC: {
       type: Number,
-      min: 0,
     },
   },
   {
