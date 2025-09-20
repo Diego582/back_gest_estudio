@@ -89,8 +89,8 @@ export default async (req, res, next) => {
     const tipoComprobante = titulo.includes("Emitidos") ? "emitida" : "recibida";
 
     // Extraer CUIT con regex
-    const match = titulo.match(/CUIT\s+(\d+)/);
-    const cuit = match ? match[1] : null;
+    const cuitMatch = titulo.match(/CUIT\s+(\d+)/);
+    const cuit = cuitMatch ? cuitMatch[1] : null;
 
     if (!cuit || cliente.cuit !== cuit) {
       return res.status(400).json({
@@ -113,6 +113,7 @@ export default async (req, res, next) => {
 
     let insertadas = 0;
     let duplicadas = 0;
+    let descartadasB = 0; // 👈 contador nuevo
     let errores = [];
 
     // Procesar facturas
@@ -134,7 +135,22 @@ export default async (req, res, next) => {
         monto_total: montoTotal,
       };
 
+
+
       try {
+        const claseMatch = facturaData.codigo_comprobante.match(/\b([ABCEM])\b$/i);
+        const clase = claseMatch ? claseMatch[1].toUpperCase() : null;
+        // 🚫 Control adicional: si es recibida y comprobante tipo B -> descartar
+        if (facturaData.tipo === "recibida" && clase === "B") {
+          descartadasB++;
+          errores.push({
+            numero: facturaData.numero,
+            punto_venta: facturaData.punto_venta,
+            motivo: "Comprobante B recibido (descartado por regla de negocio)",
+          });
+          continue;
+        }
+
         // Validar duplicados
         const existe = await Factura.findOne({
           cuit_dni: facturaData.cuit_dni,
@@ -171,15 +187,49 @@ export default async (req, res, next) => {
     }
 
     // Obtener todas las facturas del cliente
-    const facturasCliente = await Factura.find({ cliente_id: IdClient }).sort({ fecha: -1 });
+
+
+    let match = {};
+
+    // si viene cliente_id por query, filtramos
+    if (req.query.cliente_id) {
+      match.cliente_id = new mongoose.Types.ObjectId(req.query.cliente_id);
+    }
+
+    const allInvoice = await Factura.aggregate([
+      { $match: match },
+      {
+        $lookup: {
+          from: "itemfacturas",
+          localField: "_id",
+          foreignField: "factura_id",
+          as: "items"
+        }
+      },
+      {
+        $project: {
+          __v: 0,
+          createdAt: 0,
+          updatedAt: 0,
+          "items.__v": 0,
+          "items.createdAt": 0,
+          "items.updatedAt": 0,
+        }
+      },
+      {
+        $sort: { fecha: 1, numero: 1 }
+      }
+    ]);
+
 
     res.json({
       mensaje: "Carga finalizada",
       insertadas,
       duplicadas,
+      descartadasB,
       total: jsonData.length,
       errores,
-      facturas: facturasCliente,
+      facturas: allInvoice,
     });
   } catch (error) {
     console.error("Error en uploadExcelFacturas:", error);
