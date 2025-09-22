@@ -5,6 +5,7 @@ import read from "../controllers/factura/read.js";
 import readOne from "../controllers/factura/readOne.js";
 import update from "../controllers/factura/update.js";
 import uploadExcelFacturas from "../controllers/factura/uploadExcelFacturas.js";
+import uploadTxtFacturas from "../controllers/factura/uploadTxtFacturas.js";
 import multer from "multer";
 
 const router = express.Router();
@@ -25,5 +26,15 @@ router.put("/:id", update);
 router.delete("/:id", destroy);
 
 router.post("/upload-excel", upload.single("file"), uploadExcelFacturas);
+
+/* UPLOAD TXT (VENTAS + ALICUOTAS) */
+router.post(
+    "/upload-txt",
+    upload.fields([
+        { name: "ventas", maxCount: 1 },
+        { name: "alicuotas", maxCount: 1 },
+    ]),
+    uploadTxtFacturas
+);
 
 export default router;
