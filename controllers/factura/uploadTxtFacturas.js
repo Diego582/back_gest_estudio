@@ -45,6 +45,10 @@ async function readTxtFile(filePath, parser) {
 export default async (req, res) => {
 
   console.log("esto es lo que llega a a uploadtxt", req.files)
+  console.log("esto es lo que llega a a uploadtxt VENTAS", req.files["ventas"])
+  console.log("esto es lo que llega a a uploadtxt", req.files)
+
+
 
 
   try {

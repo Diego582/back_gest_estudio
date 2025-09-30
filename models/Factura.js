@@ -44,6 +44,11 @@ const facturaSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    // → NUEVO CAMPO
+    periodo: {
+      mes: { type: String, required: true }, // Ej: "Septiembre"
+      anio: { type: Number, required: true }, // Ej: 2025
+    },
   },
   {
     timestamps: true,
@@ -59,3 +64,4 @@ facturaSchema.index(
 const Factura = mongoose.model("Factura", facturaSchema);
 
 export default Factura;
+

@@ -68,6 +68,9 @@ export default async (req, res, next) => {
     }
 
     const IdClient = req.body.clienteId;
+    console.log(req.body.periodo, "esto es periodo")
+    const mes = req.body.mes;
+    const anio = req.body.anio;
     const cliente = await Cliente.findById(IdClient).select();
 
     if (!cliente) {
@@ -133,6 +136,7 @@ export default async (req, res, next) => {
         razon_social: row["Denominación Receptor"] || row["Denominación Emisor"],
         detalle: row["Detalle"] || "",
         monto_total: montoTotal,
+        periodo: { mes, anio },
       };
 
 
