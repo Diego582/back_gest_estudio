@@ -127,7 +127,7 @@ export default async (req, res, next) => {
 
       const facturaData = {
         cliente_id: IdClient,
-        fecha: new Date(`${anio}-${mes}-${dia}`),
+        fecha: new Date(Date.UTC(anio, mes - 1, dia)),
         tipo: tipoComprobante,
         codigo_comprobante: row["Tipo"],
         punto_venta: row["Punto de Venta"],
