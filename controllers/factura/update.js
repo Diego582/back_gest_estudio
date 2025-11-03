@@ -3,7 +3,7 @@ import Factura from "../../models/Factura.js";
 export default async (req, res, next) => {
   try {
     let updatedInvoice = await Factura.findByIdAndUpdate(
-      req.params._id,
+      req.params.id,
       req.body,
       { new: true }
     ).select();
