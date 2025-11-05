@@ -13,13 +13,21 @@ export default async (req, res, next) => {
       const item = {
         factura_id: facturaId,
         descripcion: "Venta de productos",
-        excento: esNC ? -Math.abs(row["Imp. Op. Exentas"] || 0) : row["Imp. Op. Exentas"] || 0,
+        excento: esNC
+          ? -Math.abs(row["Imp. Op. Exentas"] || 0)
+          : row["Imp. Op. Exentas"] || 0,
         alicuotasIva: [],
         percepciones: [],
         retenciones: [],
-        impuestosInternos: esNC ? -Math.abs(row["Impuestos Internos"] || 0) : row["Impuestos Internos"] || 0,
-        netoNoGravados: esNC ? -Math.abs(row["Neto No Gravado"] || 0) : row["Neto No Gravado"] || 0,
-        ITC: esNC ? -Math.abs(row["Impuesto ITC"] || 0) : row["Impuesto ITC"] || 0,
+        impuestosInternos: esNC
+          ? -Math.abs(row["Impuestos Internos"] || 0)
+          : row["Impuestos Internos"] || 0,
+        netoNoGravados: esNC
+          ? -Math.abs(row["Neto No Gravado"] || 0)
+          : row["Neto No Gravado"] || 0,
+        ITC: esNC
+          ? -Math.abs(row["Impuesto ITC"] || 0)
+          : row["Impuesto ITC"] || 0,
       };
 
       // IVA dinámico
@@ -68,7 +76,9 @@ export default async (req, res, next) => {
     }
 
     const IdClient = req.body.clienteId;
-    console.log(req.body.periodo, "esto es periodo")
+    console.log(req.body.periodo, "esto es periodo");
+    console.log(req.body, "esto es body");
+
     const mes = req.body.mes;
     const anio = req.body.anio;
     const cliente = await Cliente.findById(IdClient).select();
@@ -84,12 +94,16 @@ export default async (req, res, next) => {
     const data = xlsx.utils.sheet_to_json(sheet, { header: 1, defval: "" });
 
     if (data.length < 2) {
-      return res.status(400).json({ message: "El archivo no tiene datos suficientes" });
+      return res
+        .status(400)
+        .json({ message: "El archivo no tiene datos suficientes" });
     }
 
     // Control de contribuyente y tipo de comprobantes
     const titulo = data[0][0];
-    const tipoComprobante = titulo.includes("Emitidos") ? "emitida" : "recibida";
+    const tipoComprobante = titulo.includes("Emitidos")
+      ? "emitida"
+      : "recibida";
 
     // Extraer CUIT con regex
     const cuitMatch = titulo.match(/CUIT\s+(\d+)/);
@@ -97,7 +111,9 @@ export default async (req, res, next) => {
 
     if (!cuit || cliente.cuit !== cuit) {
       return res.status(400).json({
-        message: `El CUIT del archivo (${cuit || "no encontrado"}) no coincide con el del cliente (${cliente.cuit})`,
+        message: `El CUIT del archivo (${
+          cuit || "no encontrado"
+        }) no coincide con el del cliente (${cliente.cuit})`,
       });
     }
 
@@ -112,7 +128,9 @@ export default async (req, res, next) => {
         });
         return obj;
       })
-      .filter((obj) => Object.values(obj).some((value) => value !== "" && value !== null));
+      .filter((obj) =>
+        Object.values(obj).some((value) => value !== "" && value !== null)
+      );
 
     let insertadas = 0;
     let duplicadas = 0;
@@ -123,7 +141,9 @@ export default async (req, res, next) => {
     for (const row of jsonData) {
       const [dia, mes, anio] = row["Fecha"].split("/");
       const esNC = /NC|Nota de Crédito/i.test(row["Tipo"]);
-      const montoTotal = esNC ? -Math.abs(row["Imp. Total"]) : row["Imp. Total"];
+      const montoTotal = esNC
+        ? -Math.abs(row["Imp. Total"])
+        : row["Imp. Total"];
 
       const facturaData = {
         cliente_id: IdClient,
@@ -133,16 +153,16 @@ export default async (req, res, next) => {
         punto_venta: row["Punto de Venta"],
         numero: row["Número Desde"],
         cuit_dni: row["Nro. Doc. Receptor"]?.toString(),
-        razon_social: row["Denominación Receptor"] || row["Denominación Emisor"],
+        razon_social:
+          row["Denominación Receptor"] || row["Denominación Emisor"],
         detalle: row["Detalle"] || "",
         monto_total: montoTotal,
         periodo: { mes, anio },
       };
 
-
-
       try {
-        const claseMatch = facturaData.codigo_comprobante.match(/\b([ABCEM])\b$/i);
+        const claseMatch =
+          facturaData.codigo_comprobante.match(/\b([ABCEM])\b$/i);
         const clase = claseMatch ? claseMatch[1].toUpperCase() : null;
         // 🚫 Control adicional: si es recibida y comprobante tipo B -> descartar
         if (facturaData.tipo === "recibida" && clase === "B") {
@@ -192,7 +212,6 @@ export default async (req, res, next) => {
 
     // Obtener todas las facturas del cliente
 
-
     let match = {};
 
     // si viene cliente_id por query, filtramos
@@ -207,8 +226,8 @@ export default async (req, res, next) => {
           from: "itemfacturas",
           localField: "_id",
           foreignField: "factura_id",
-          as: "items"
-        }
+          as: "items",
+        },
       },
       {
         $project: {
@@ -218,13 +237,12 @@ export default async (req, res, next) => {
           "items.__v": 0,
           "items.createdAt": 0,
           "items.updatedAt": 0,
-        }
+        },
       },
       {
-        $sort: { fecha: 1, numero: 1 }
-      }
+        $sort: { fecha: 1, numero: 1 },
+      },
     ]);
-
 
     res.json({
       mensaje: "Carga finalizada",
@@ -240,8 +258,3 @@ export default async (req, res, next) => {
     res.status(500).json({ message: "Error procesando el archivo", error });
   }
 };
-
-
-
-
-
