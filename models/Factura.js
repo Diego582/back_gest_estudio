@@ -46,8 +46,8 @@ const facturaSchema = new mongoose.Schema(
     },
     // → NUEVO CAMPO
     periodo: {
-      mes: { type: String, required: true }, // Ej: "Septiembre"
-      anio: { type: Number, required: true }, // Ej: 2025
+      mes: { type: Number, required: true },
+      anio: { type: Number, required: true },
     },
   },
   {

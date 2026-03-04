@@ -76,11 +76,10 @@ export default async (req, res, next) => {
     }
 
     const IdClient = req.body.clienteId;
-    console.log(req.body.periodo, "esto es periodo");
-    console.log(req.body, "esto es body");
+   
 
-    const mes = req.body.mes;
-    const anio = req.body.anio;
+    const mesPeriodo = req.body.mes;
+    const anioPeriodo = req.body.anio;
     const cliente = await Cliente.findById(IdClient).select();
 
     if (!cliente) {
@@ -111,9 +110,8 @@ export default async (req, res, next) => {
 
     if (!cuit || cliente.cuit !== cuit) {
       return res.status(400).json({
-        message: `El CUIT del archivo (${
-          cuit || "no encontrado"
-        }) no coincide con el del cliente (${cliente.cuit})`,
+        message: `El CUIT del archivo (${cuit || "no encontrado"
+          }) no coincide con el del cliente (${cliente.cuit})`,
       });
     }
 
@@ -157,7 +155,7 @@ export default async (req, res, next) => {
           row["Denominación Receptor"] || row["Denominación Emisor"],
         detalle: row["Detalle"] || "",
         monto_total: montoTotal,
-        periodo: { mes, anio },
+        periodo: { mes: mesPeriodo, anio: anioPeriodo },
       };
 
       try {
