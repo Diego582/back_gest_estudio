@@ -14,6 +14,7 @@ export default async (req, res, next) => {
       response: newInvoice,
     });
   } catch (error) {
+    console.log(error, "error")
 
     return next(error);
   }

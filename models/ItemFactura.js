@@ -10,7 +10,6 @@ const itemFacturaSchema = new mongoose.Schema(
     descripcion: {
       type: String,
       trim: true,
-      required: true,
     },
     excento: {
       type: Number,
