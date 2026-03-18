@@ -12,6 +12,8 @@ export const generarAlicuotas = (facturas) => {
     facturas.forEach((f) => {
         f.items.forEach((item) => {
             item.alicuotasIva?.forEach((iva) => {
+                console.log(iva, "esto es la iteracion de alicuotas")
+
                 lines.push(
                     [
                         formatearTipoComprobante(f.codigo_comprobante),

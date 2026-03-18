@@ -1,3 +1,4 @@
+import { calcularExento, calcularNetoGravado, calcularNoGravado, calcularPercepciones } from "../../utils/afipCalculos.js";
 import {
     pad,
     formatDate,
@@ -13,7 +14,14 @@ export const generarComprobantes = (facturas) => {
 
     return facturas
         .map((f) => {
+
             const tipoDoc = obtenerTipoDocumento(f.cuit_dni);
+            const netoGravado = calcularNetoGravado(f.items);
+            const noGravado = calcularNoGravado(f.items);
+            const exento = calcularExento(f.items);
+            const percepciones = calcularPercepciones(f.items);
+
+
             return [
                 formatDate(f.fecha),
                 formatearTipoComprobante(f.codigo_comprobante),
@@ -25,12 +33,12 @@ export const generarComprobantes = (facturas) => {
                     tipoDoc === "99" ? "CONSUMIDOR FINAL" : f.razon_social,
                     30
                 ),
-                formatImporte(f.monto_total),
-                formatImporte(f.no_gravado || 0),
-                formatImporte(f.percepcion_iva || 0),
-                formatImporte(f.percepcion_iibb || 0),
-                formatImporte(f.exento || 0),
-                formatImporte(f.neto_gravado || 0),
+                formatImporte(f.monto_total),//importe total
+                formatImporte(noGravado),
+                formatImporte(percepciones.iva),   // 🔥 IVA
+                formatImporte(percepciones.iibb),  // 🔥 IIBB
+                formatImporte(exento),
+                formatImporte(netoGravado),
             ].join("");
         })
         .join("\n");
