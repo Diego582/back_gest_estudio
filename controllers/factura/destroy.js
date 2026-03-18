@@ -6,11 +6,7 @@ export default async (req, res, next) => {
   try {
     const { id } = req.params;
 
-
-
-    let itemfacturadelete = await ItemFactura.deleteMany({ factura_id: id });
-
-
+    await ItemFactura.deleteMany({ factura_id: id });
 
     let deletedInvoice = await Factura.findByIdAndDelete(id);
 
