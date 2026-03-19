@@ -42,3 +42,16 @@ export const formatearNumeroDoc = (doc) => {
 export const formatearAlicuota = (iva) => {
   return Math.round(iva * 100).toString().padStart(4, "0");
 };
+
+
+export const formatCaracteresEspeciales = (texto = "", length) => {
+  return texto
+    .normalize("NFD") // separa acentos
+    .replace(/[\u0300-\u036f]/g, "") // elimina acentos
+    .replace(/ñ/g, "n")
+    .replace(/Ñ/g, "N")
+    .toUpperCase()
+    .replace(/[^A-Z0-9 ]/g, "") // limpia caracteres raros
+    .padEnd(length, " ")
+    .slice(0, length);
+};

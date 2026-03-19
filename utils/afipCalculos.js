@@ -42,4 +42,26 @@ export const calcularNetoGravado = (items = []) => {
   };
 
 
+  export const calcularIvaTotal = (items = []) => {
+    return items.reduce((total, item) => {
+      const sumaItem = (item.alicuotasIva || []).reduce(
+        (acc, alicuota) => acc + (alicuota.iva || 0),
+        0
+      );
+      return total + sumaItem;
+    }, 0);
+  };
 
+  export const calcularCantidadAlicuotas = (items = []) => {
+    const tipos = new Set();
+  
+    items.forEach((item) => {
+      (item.alicuotasIva || []).forEach((a) => {
+        if (a.tipo) {
+          tipos.add(a.tipo);
+        }
+      });
+    });
+  
+    return tipos.size;
+  };
