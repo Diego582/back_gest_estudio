@@ -1,15 +1,12 @@
 import JSZip from "jszip";
 import Factura from "../../models/Factura.js";
 import ItemFactura from "../../models/ItemFactura.js";
-import { generarComprobantes } from "./comprobantes.js";
-import { generarAlicuotas } from "./alicuotas.js";
+import { generarComprobantesVentas } from "./comprobantesVentas.js";
+import { generarAlicuotasVentas } from "./alicuotasVentas.js";
+import { generarComprobantesCompras } from "./comprobantesCompras.js";
+import { generarAlicuotasCompras } from "./alicuotasCompras.js";
 
-export const generarArchivosIVA = async ({
-  clienteId,
-  mes,
-  anio,
-  tipo,
-}) => {
+export const generarArchivosIVA = async ({ clienteId, mes, anio, tipo }) => {
   const facturas = await Factura.find({
     cliente_id: clienteId,
     tipo,
@@ -23,23 +20,24 @@ export const generarArchivosIVA = async ({
 
   const data = facturas.map((f) => ({
     ...f,
-    items: items.filter(
-      (i) => i.factura_id.toString() === f._id.toString()
-    ),
+    items: items.filter((i) => i.factura_id.toString() === f._id.toString()),
   }));
 
+  let comprobantes;
+  let alicuotas;
+  let prefix;
 
-
-
-  const comprobantes = generarComprobantes(data);
-
-
-  const alicuotas = generarAlicuotas(data);
-
+  if (tipo === "emitida") {
+    comprobantes = generarComprobantesVentas(data);
+    alicuotas = generarAlicuotasVentas(data);
+    prefix = "VENTAS";
+  } else {
+    comprobantes = generarComprobantesCompras(data);
+    alicuotas = generarAlicuotasCompras(data);
+    prefix = "COMPRAS";
+  }
 
   const zip = new JSZip();
-
-  const prefix = tipo === "emitida" ? "VENTAS" : "COMPRAS";
 
   zip.file(`${prefix}_COMPROBANTES.txt`, comprobantes);
   zip.file(`${prefix}_ALICUOTAS.txt`, alicuotas);

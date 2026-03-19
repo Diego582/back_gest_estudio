@@ -1,5 +1,4 @@
-export const pad = (num, size) =>
-  String(num || 0).padStart(size, "0");
+export const pad = (num, size) => String(num || 0).padStart(size, "0");
 
 export const formatDate = (date) =>
   new Date(date).toISOString().slice(0, 10).replace(/-/g, "");
@@ -33,16 +32,28 @@ export const formatearNumeroDoc = (doc) => {
 
   if (limpio.length < 4) {
     // Consumidor final
-    return "0".padStart(11, "0");
+    return "0".padStart(20, "0");
   }
 
-  return limpio.padStart(11, "0");
+  return limpio.padStart(20, "0");
 };
 
-export const formatearAlicuota = (iva) => {
-  return Math.round(iva * 100).toString().padStart(4, "0");
-};
+export const formatearAlicuota = (tipo) => {
+  const valor = parseFloat(tipo);
+  const mapa = {
+    0: "0003", // 0%
+    10.5: "0004", // 10.5%
+    21: "0005", // 21%
+    27: "0006", // 27%
+    5: "0008", // 5%
+    2.5: "0009", // 2.5%
+  };
 
+  if (!mapa[valor]) {
+    console.log("⚠️ Alícuota desconocida:", tipo);
+  }
+  return mapa[valor] || "0005";
+};
 
 export const formatCaracteresEspeciales = (texto = "", length) => {
   return texto

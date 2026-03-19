@@ -9,7 +9,7 @@ import {
 
 
 
-export const generarComprobantes = (facturas) => {
+export const generarComprobantesCompras = (facturas) => {
 
 
     return facturas
