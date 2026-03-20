@@ -3,10 +3,18 @@ export const pad = (num, size) => String(num || 0).padStart(size, "0");
 export const formatDate = (date) =>
   new Date(date).toISOString().slice(0, 10).replace(/-/g, "");
 
-export const formatImporte = (num) =>
-  Math.round((num || 0) * 100)
+export const formatImporte = (num) => {
+  let valor = Number(num) || 0;
+
+  if (valor < 0) {
+    console.log("⚠️ Importe negativo detectado, se convierte a positivo:", valor);
+    valor = Math.abs(valor);
+  }
+
+  return Math.round(valor * 100)
     .toString()
     .padStart(15, "0");
+};
 
 export const formatTexto = (text, length) =>
   (text || "").toString().padEnd(length, " ").substring(0, length);

@@ -10,47 +10,111 @@ import {
 
 
 export const generarComprobantesCompras = (facturas) => {
-
-
     return facturas
         .map((f) => {
-            console.log(f, "iteracion de map de facturas")
             const tipoDoc = obtenerTipoDocumento(f.cuit_dni);
+
             const noGravado = calcularNoGravado(f.items);
             const exento = calcularExento(f.items);
             const percepciones = calcularPercepciones(f.items);
-            const cantidadAlicuotas = calcularCantidadAlicuotas(f.items)
-            return [
+            const cantidadAlicuotas = calcularCantidadAlicuotas(f.items);
+            const ivaTotal = calcularIvaTotal(f.items);
+
+            const impuestosInternos = f.items.reduce(
+                (t, i) => t + (i.impuestosInternos || 0),
+                0
+            );
+
+            const otrosTributos = f.items.reduce(
+                (t, i) => t + (i.ITC || 0),
+                0
+            );
+
+            const linea = [
+                // 1
                 formatDate(f.fecha),
+
+                // 2
                 formatearTipoComprobante(f.codigo_comprobante),
+
+                // 3
                 pad(f.punto_venta, 5),
+
+                // 4
                 pad(f.numero, 20),
-                pad(f.numero, 20),
+
+                // 5 despacho importación
+                "".padEnd(16, " "),
+
+                // 6
                 tipoDoc,
+
+                // 7
                 formatearNumeroDoc(f.cuit_dni),
-                formatCaracteresEspeciales(formatTexto(
-                    tipoDoc === "99" ? "CONSUMIDOR FINAL" : f.razon_social,
+
+                // 8
+                formatCaracteresEspeciales(
+                    formatTexto(f.razon_social, 30),
                     30
-                ), 30),
-                formatImporte(f.monto_total),//importe total
-                formatImporte(noGravado),//No gravado
-                formatImporte(0),//Percepción no categorizados	
-                formatImporte(exento),//excento
-                formatImporte(percepciones.iva),   // 🔥 IVA
-                formatImporte(percepciones.iibb),  // 🔥 IIBB
-                formatImporte(0),//Percepciones municipales
-                formatImporte(0), // impuestos internos
-                "PES",                                // 3
-                "0001000000",                          // tipo cambio
+                ),
 
-                pad(cantidadAlicuotas, 1),            // 1
-                "0",                                  // código operación
+                // 9 total
+                formatImporte(f.monto_total),
 
-                formatImporte(0), // 🔥 Otros tributos
+                // 10 no gravado
+                formatImporte(noGravado),
 
-                formatDate(f.fecha),                  // 8
+                // 11 exento
+                formatImporte(exento),
 
+                // 12 percepciones IVA
+                formatImporte(percepciones.iva),
+
+                // 13 percepciones nacionales
+                formatImporte(0),
+
+                // 14 percepciones IIBB
+                formatImporte(percepciones.iibb),
+
+                // 15 municipales
+                formatImporte(0),
+
+                // 16 internos
+                formatImporte(impuestosInternos),
+
+                // 17 moneda
+                "PES",
+
+                // 18 tipo cambio
+                "0001000000",
+
+                // 19 alícuotas
+                pad(cantidadAlicuotas, 1),
+
+                // 20 código operación
+                "0",
+
+                // 21 crédito fiscal computable 🔥
+                formatImporte(ivaTotal),
+
+                // 22 otros tributos
+                formatImporte(otrosTributos),
+
+                // 23 cuit corredor
+                "0".padStart(11, "0"),
+
+                // 24 denominación corredor
+                "".padEnd(30, " "),
+
+                // 25 iva comisión
+                formatImporte(0),
             ].join("");
+
+            if (linea.length !== 325) {
+                console.log("❌ ERROR LONGITUD COMPRA:", linea.length);
+            }
+
+            return linea;
         })
         .join("\n");
 };
