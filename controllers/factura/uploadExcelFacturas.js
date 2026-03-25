@@ -76,7 +76,6 @@ export default async (req, res, next) => {
     }
 
     const IdClient = req.body.clienteId;
-   
 
     const mesPeriodo = req.body.mes;
     const anioPeriodo = req.body.anio;
@@ -110,8 +109,9 @@ export default async (req, res, next) => {
 
     if (!cuit || cliente.cuit !== cuit) {
       return res.status(400).json({
-        message: `El CUIT del archivo (${cuit || "no encontrado"
-          }) no coincide con el del cliente (${cliente.cuit})`,
+        message: `El CUIT del archivo (${
+          cuit || "no encontrado"
+        }) no coincide con el del cliente (${cliente.cuit})`,
       });
     }
 
@@ -150,14 +150,17 @@ export default async (req, res, next) => {
         codigo_comprobante: row["Tipo"],
         punto_venta: row["Punto de Venta"],
         numero: row["Número Desde"],
-        cuit_dni: row["Nro. Doc. Receptor"]?.toString(),
+        cuit_dni:
+          tipoComprobante === "emitida"
+            ? row["Nro. Doc. Receptor"].toString()
+            : row["Nro. Doc. Emisor"].toString(),
         razon_social:
           row["Denominación Receptor"] || row["Denominación Emisor"],
         detalle: row["Detalle"] || "",
         monto_total: montoTotal,
         periodo: { mes: mesPeriodo, anio: anioPeriodo },
       };
-
+      console.log(facturaData, "factura que se enviara a guardar ");
       try {
         const claseMatch =
           facturaData.codigo_comprobante.match(/\b([ABCEM])\b$/i);
