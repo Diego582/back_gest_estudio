@@ -109,9 +109,8 @@ export default async (req, res, next) => {
 
     if (!cuit || cliente.cuit !== cuit) {
       return res.status(400).json({
-        message: `El CUIT del archivo (${
-          cuit || "no encontrado"
-        }) no coincide con el del cliente (${cliente.cuit})`,
+        message: `El CUIT del archivo (${cuit || "no encontrado"
+          }) no coincide con el del cliente (${cliente.cuit})`,
       });
     }
 
@@ -133,6 +132,7 @@ export default async (req, res, next) => {
     let insertadas = 0;
     let duplicadas = 0;
     let descartadasB = 0; // 👈 contador nuevo
+    let actualizadas = 0;
     let errores = [];
 
     // Procesar facturas
@@ -177,6 +177,7 @@ export default async (req, res, next) => {
         }
 
         // Validar duplicados
+        // 🔎 Buscar por clave completa (modo normal)
         const existe = await Factura.findOne({
           cuit_dni: facturaData.cuit_dni,
           codigo_comprobante: facturaData.codigo_comprobante,
@@ -186,6 +187,7 @@ export default async (req, res, next) => {
         });
 
         if (existe) {
+          // ✔ Caso normal: ya existe bien cargada
           duplicadas++;
           errores.push({
             numero: facturaData.numero,
@@ -193,6 +195,26 @@ export default async (req, res, next) => {
             motivo: "Factura duplicada (ya existe en la base de datos)",
           });
           continue;
+        }
+
+        // 🔥 NUEVO: buscar si existe pero con CUIT incorrecto (del cliente)
+        const existeMal = await Factura.findOne({
+          codigo_comprobante: facturaData.codigo_comprobante,
+          punto_venta: facturaData.punto_venta,
+          numero: facturaData.numero,
+          tipo: facturaData.tipo,
+          cuit_dni: cliente.cuit, // 👈 clave del error histórico
+        });
+
+        if (existeMal) {
+          // ✔ Solo corregimos si coincide con el error conocido
+          await Factura.updateOne(
+            { _id: existeMal._id },
+            { $set: { cuit_dni: facturaData.cuit_dni } }
+          );
+
+          actualizadas++;
+          continue; // 👈 NO insertar
         }
 
         // Insertar factura y items
@@ -249,6 +271,7 @@ export default async (req, res, next) => {
       mensaje: "Carga finalizada",
       insertadas,
       duplicadas,
+      actualizadas,
       descartadasB,
       total: jsonData.length,
       errores,
