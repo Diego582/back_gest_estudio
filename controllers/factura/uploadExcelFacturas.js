@@ -178,45 +178,45 @@ export default async (req, res, next) => {
 
         // Validar duplicados
         // 🔎 Buscar por clave completa (modo normal)
-        const existe = await Factura.findOne({
-          cuit_dni: facturaData.cuit_dni,
+        // 🔎 Buscar por clave SIN CUIT (clave real del comprobante)
+        const candidatos = await Factura.find({
           codigo_comprobante: facturaData.codigo_comprobante,
           punto_venta: facturaData.punto_venta,
           numero: facturaData.numero,
           tipo: facturaData.tipo,
         });
 
-        if (existe) {
-          // ✔ Caso normal: ya existe bien cargada
-          duplicadas++;
-          errores.push({
-            numero: facturaData.numero,
-            punto_venta: facturaData.punto_venta,
-            motivo: "Factura duplicada (ya existe en la base de datos)",
-          });
-          continue;
-        }
-
-        // 🔥 NUEVO: buscar si existe pero con CUIT incorrecto (del cliente)
-        const existeMal = await Factura.findOne({
-          codigo_comprobante: facturaData.codigo_comprobante,
-          punto_venta: facturaData.punto_venta,
-          numero: facturaData.numero,
-          tipo: facturaData.tipo,
-          cuit_dni: cliente.cuit, // 👈 clave del error histórico
-        });
-
-        if (existeMal) {
-          // ✔ Solo corregimos si coincide con el error conocido
-          await Factura.updateOne(
-            { _id: existeMal._id },
-            { $set: { cuit_dni: facturaData.cuit_dni } }
+        if (candidatos.length > 0) {
+          // 🟡 1. Buscar si hay alguno con CUIT del cliente (error histórico)
+          const conCuitCliente = candidatos.find(
+            (f) => f.cuit_dni === cliente.cuit
           );
 
-          actualizadas++;
-          continue; // 👈 NO insertar
-        }
+          if (conCuitCliente) {
+            await Factura.updateOne(
+              { _id: conCuitCliente._id },
+              { $set: { cuit_dni: facturaData.cuit_dni } }
+            );
 
+            actualizadas++;
+            continue;
+          }
+
+          // 🟢 2. Buscar duplicado real (mismo CUIT)
+          const duplicadoReal = candidatos.find(
+            (f) => f.cuit_dni === facturaData.cuit_dni
+          );
+
+          if (duplicadoReal) {
+            duplicadas++;
+            errores.push({
+              numero: facturaData.numero,
+              punto_venta: facturaData.punto_venta,
+              motivo: "Factura duplicada (mismo proveedor)",
+            });
+            continue;
+          }
+        }
         // Insertar factura y items
         const factura = await Factura.create(facturaData);
         const itemData = buildItemFactura(row, factura._id);
