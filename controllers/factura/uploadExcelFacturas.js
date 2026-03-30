@@ -189,7 +189,10 @@ export default async (req, res, next) => {
         if (candidatos.length > 0) {
           // 🟡 1. Buscar si hay alguno con CUIT del cliente (error histórico)
           const conCuitCliente = candidatos.find(
-            (f) => f.cuit_dni === cliente.cuit
+            (f) =>
+              f.cuit_dni === cliente.cuit &&
+              f.monto_total === facturaData.monto_total &&
+              new Date(f.fecha).getTime() === facturaData.fecha.getTime()
           );
 
           if (conCuitCliente) {
@@ -204,7 +207,10 @@ export default async (req, res, next) => {
 
           // 🟢 2. Buscar duplicado real (mismo CUIT)
           const duplicadoReal = candidatos.find(
-            (f) => f.cuit_dni === facturaData.cuit_dni
+            (f) =>
+              f.cuit_dni === facturaData.cuit_dni &&
+              f.monto_total === facturaData.monto_total &&
+              new Date(f.fecha).getTime() === facturaData.fecha.getTime()
           );
 
           if (duplicadoReal) {
