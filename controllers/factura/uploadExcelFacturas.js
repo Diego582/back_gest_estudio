@@ -160,7 +160,7 @@ export default async (req, res, next) => {
         monto_total: montoTotal,
         periodo: { mes: mesPeriodo, anio: anioPeriodo },
       };
-      console.log(facturaData, "factura que se enviara a guardar ");
+
       try {
         const claseMatch =
           facturaData.codigo_comprobante.match(/\b([ABCEM])\b$/i);
@@ -186,6 +186,7 @@ export default async (req, res, next) => {
           tipo: facturaData.tipo,
         });
 
+
         if (candidatos.length > 0) {
           // 🟡 1. Buscar si hay alguno con CUIT del cliente (error histórico)
           const conCuitCliente = candidatos.find(
@@ -194,6 +195,7 @@ export default async (req, res, next) => {
               f.monto_total === facturaData.monto_total &&
               new Date(f.fecha).getTime() === facturaData.fecha.getTime()
           );
+
 
           if (conCuitCliente) {
             await Factura.updateOne(
@@ -212,6 +214,7 @@ export default async (req, res, next) => {
               f.monto_total === facturaData.monto_total &&
               new Date(f.fecha).getTime() === facturaData.fecha.getTime()
           );
+
 
           if (duplicadoReal) {
             duplicadas++;
