@@ -36,6 +36,10 @@ export const generarComprobantesCompras = (facturas) => {
 
       const otrosTributos = f.items.reduce((t, i) => t + (i.ITC || 0), 0);
 
+
+      console.log(percepciones.iva, "iteracion de map de percepciones")
+      console.log(percepciones.iibb, "iteracion de map de percepciones")
+
       const linea = [
         // 1
         formatDate(f.fecha),

@@ -20,6 +20,10 @@ export const generarComprobantesVentas = (facturas) => {
             const exento = calcularExento(f.items);
             const percepciones = calcularPercepciones(f.items);
             const cantidadAlicuotas = calcularCantidadAlicuotas(f.items)
+
+            console.log(percepciones.iva, "iteracion de map de percepciones")
+            console.log(percepciones.iibb, "iteracion de map de percepciones")
+
             return [
                 formatDate(f.fecha),
                 formatearTipoComprobante(f.codigo_comprobante),
