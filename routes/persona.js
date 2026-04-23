@@ -4,6 +4,7 @@ import destroy from "../controllers/persona/destroy.js";
 import read from "../controllers/persona/read.js";
 import readOne from "../controllers/persona/readOne.js";
 import update from "../controllers/persona/update.js";
+import readByDocumento from "../controllers/persona/readByDocumento.js";
 
 
 const router = express.Router();
