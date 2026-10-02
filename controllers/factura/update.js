@@ -2,11 +2,12 @@ import Factura from "../../models/Factura.js";
 
 export default async (req, res, next) => {
   try {
-    let updatedInvoice = await Factura.findByIdAndUpdate(
+    const updatedInvoice = await Factura.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true }
+      { new: true, runValidators: true }
     ).select();
+
     if (updatedInvoice) {
       return res.status(200).json({
         success: true,
@@ -14,9 +15,9 @@ export default async (req, res, next) => {
         response: updatedInvoice,
       });
     } else {
-      return res.status(400).json({
+      return res.status(404).json({
         success: false,
-        message: "not updated",
+        message: "Invoice not found",
         response: null,
       });
     }
