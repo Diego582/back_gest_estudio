@@ -3,7 +3,7 @@ import create from "../controllers/itemFactura/create.js";
 import destroy from "../controllers/itemFactura/destroy.js";
 import read from "../controllers/itemFactura/read.js";
 import readOne from "../controllers/itemFactura/readOne.js";
-import update from "../controllers/itemFactura/destroy.js";
+import update from "../controllers/itemFactura/update.js";
 
 
 const router = express.Router();
