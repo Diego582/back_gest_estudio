@@ -3,9 +3,9 @@ import ItemFactura from "../../models/ItemFactura.js";
 export default async (req, res, next) => {
   try {
     let updatedItemInvoice = await ItemFactura.findByIdAndUpdate(
-      req.params._id,
+      req.params.id,
       req.body,
-      { new: true }
+      { new: true, runValidators: true }
     ).select();
     if (updatedItemInvoice) {
       return res.status(200).json({
