@@ -15,6 +15,11 @@ const facturaSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    // Clasificación opcional: los comprobantes anteriores sin este campo se consideran no gastos.
+    esGasto: {
+      type: Boolean,
+      default: false,
+    },
     tipo: {
       type: String,
       enum: ["emitida", "recibida"],
