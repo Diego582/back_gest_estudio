@@ -19,7 +19,8 @@ export default async (req, res, next) => {
       if (!["emitida", "recibida"].includes(tipo)) return invalido();
       match.tipo = tipo;
     }
-    if (mes !== undefined && mes !== "Todos" && mes !== "") {
+    // El selector histórico del frontend representa Todos con el valor 0.
+    if (mes !== undefined && mes !== "Todos" && mes !== "" && mes !== "0") {
       if (typeof mes !== "string" || typeof anio !== "string" ||
           !Number.isInteger(Number(mes)) || Number(mes) < 1 || Number(mes) > 12 ||
           !/^\d{4}$/.test(anio)) return invalido();
