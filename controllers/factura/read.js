@@ -10,6 +10,42 @@ export default async (req, res, next) => {
       match.cliente_id = new mongoose.Types.ObjectId(req.query.cliente_id);
     }
 
+    // Filtros opcionales: conservar las consultas históricas sin parámetros.
+    const { tipo, mes, anio, fechaInicio, fechaFin } = req.query;
+    const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    const invalido = () => res.status(400).json({ success: false, message: "Filtros de facturas inválidos" });
+    if (tipo !== undefined) {
+      if (!["emitida", "recibida"].includes(tipo)) return invalido();
+      match.tipo = tipo;
+    }
+    if (mes !== undefined && mes !== "Todos" && mes !== "") {
+      if (typeof mes !== "string" || typeof anio !== "string" ||
+          !Number.isInteger(Number(mes)) || Number(mes) < 1 || Number(mes) > 12 ||
+          !/^\d{4}$/.test(anio)) return invalido();
+      // Convertir valores históricos sin modificar los documentos.
+      const numero = (input) => ({ $convert: { input, to: "double", onError: null, onNull: null } });
+      match.$expr = { $and: [
+        { $eq: [{ $ifNull: [numero("$periodo.mes"), {
+          $add: [{ $indexOfArray: [meses, "$periodo.mes"] }, 1]
+        }] }, Number(mes)] },
+        { $eq: [numero("$periodo.anio"), Number(anio)] }
+      ] };
+    }
+    const fechaValida = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) &&
+      Number.isFinite(Date.parse(v)) && new Date(v).toISOString().slice(0, 10) === v;
+    if (fechaInicio !== undefined || fechaFin !== undefined) {
+      if ((fechaInicio !== undefined && !fechaValida(fechaInicio)) ||
+          (fechaFin !== undefined && !fechaValida(fechaFin))) return invalido();
+      match.fecha = {};
+      if (fechaInicio) match.fecha.$gte = new Date(fechaInicio);
+      if (fechaFin) {
+        const fin = new Date(fechaFin);
+        fin.setUTCDate(fin.getUTCDate() + 1);
+        match.fecha.$lt = fin;
+      }
+    }
+
     const allInvoice = await Factura.aggregate([
       { $match: match },
       {
